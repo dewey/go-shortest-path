@@ -20,8 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	var routingService routing.Service
-	routingService = routing.NewService(gmr, mem)
+	var routingService = routing.NewService(gmr, mem)
 
 	r := chi.NewRouter()
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
