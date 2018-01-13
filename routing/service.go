@@ -2,7 +2,6 @@ package routing
 
 import (
 	"errors"
-	"time"
 
 	"github.com/dewey/go-shortest-path/storage"
 
@@ -29,10 +28,12 @@ func NewService(api geo.API, db storage.API) Service {
 	}
 }
 
-// CalculateShortestPath calculates the shortest paths by using Dijkstra's algorithm
+// CalculateShortestPath calculates the shortest paths by using the Google Maps API
 func (s *service) CalculateShortestPath(locations []geo.Location) (string, error) {
 	token := uuid.New()
-	s.db.Set(token.String(), storage.Result{Status: "in progress"})
+	if err := s.db.Set(token.String(), storage.Result{Status: "in progress"}); err != nil {
+		return "", err
+	}
 	go s.calculate(token.String(), locations)
 	return token.String(), nil
 }
@@ -40,10 +41,9 @@ func (s *service) CalculateShortestPath(locations []geo.Location) (string, error
 func (s *service) calculate(token string, locations []geo.Location) {
 	dir, err := s.api.CalculateDirections(locations)
 	if err != nil {
-		s.db.Set(token, storage.Result{
-			Status: "failure",
-			Error:  err.Error(),
-		})
+		if err = s.db.Set(token, storage.Result{Status: "failure", Error: err.Error()}); err != nil {
+			return
+		}
 		return
 	}
 	var tDistance, tTime int
@@ -70,13 +70,15 @@ func (s *service) calculate(token string, locations []geo.Location) {
 	for _, p := range wpOrdered {
 		paths = append(paths, []string{p.Latitude, p.Longitude})
 	}
-	time.Sleep(time.Second * 30)
-	s.db.Set(token, storage.Result{
+	err = s.db.Set(token, storage.Result{
 		Status:        "success",
 		Paths:         paths,
 		TotalDistance: tDistance,
 		TotalTime:     tTime,
 	})
+	if err != nil {
+		return
+	}
 }
 
 // GetShortestPath gets the shortest path calculation's result from the database
