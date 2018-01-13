@@ -14,6 +14,7 @@ Simple API based on the Google Maps Directions API, nothing to see here. Please 
 ## Build
 
 ```zsh
+GOOS=linux go build api.go
 docker build -f Dockerfile -t go-shortest-path:latest .
 docker tag 5bd59077e93d tehwey/go-shortest-path
 docker push tehwey/go-shortest-path
