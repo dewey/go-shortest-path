@@ -143,5 +143,10 @@ func (r *googleMapsRepository) CalculateDirections(locations []Location) (Direct
 		return Directions{}, err
 	}
 
+	// If the routing is impossible or a coordinate doesn't exist Google's API returns empty routes and status "ZERO_RESULTS"
+	if len(dir.Routes) < 1 {
+		return Directions{}, errors.New("no routes returned from API")
+	}
+
 	return dir, nil
 }
